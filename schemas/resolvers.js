@@ -67,11 +67,3 @@ export const resolvers = {
   },
 
 }
-
-
-const schema = makeExecutableSchema({
-  typeDefs,
-  resolvers,
-  logger
-});
-export { schema };
