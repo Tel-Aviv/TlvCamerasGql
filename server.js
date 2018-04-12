@@ -1,4 +1,5 @@
 import express from 'express';
+import { graphiqlExpress } from 'graphql-server';
 import path from 'path';
 import cors from 'cors';
 
@@ -26,3 +27,4 @@ const websocketServer = createServer(graphQLServer);
 websocketServer.listen(PORT, () => {
     console.log(`Websocket Server is listening on: ${PORT}`);
   }
+);
