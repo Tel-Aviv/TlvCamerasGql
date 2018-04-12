@@ -33,7 +33,7 @@ type Query {
 
 `;
 
-
+const logger = { log: (e) => console.log(e) }
 
 const schema = makeExecutableSchema({
   typeDefs,
