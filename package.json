@@ -14,6 +14,7 @@
     "cors": "^2.8.4",
     "elasticsearch": "^14.2.2",
     "express": "^4.16.3",
+    "graphql": "^0.13.2",
     "graphql-tools": "^2.24.0",
     "no-kafka": "^3.2.9",
     "nodemon": "^1.17.3"
