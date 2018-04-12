@@ -1,0 +1,26 @@
+{
+  "innovi": {
+    "mappings": {
+      "vcount": {
+        "properties": {
+          "event_name": {
+            "type": "text"
+          },
+          "event_time": {
+            "type": "date",
+            "format": "[yyyy-MM-dd'T'HH:mm:ss]"
+          },
+          "event_type": {
+            "type": "keyword"
+          },
+          "rule_id": {
+            "type": "integer"
+          },
+          "source_id": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}
