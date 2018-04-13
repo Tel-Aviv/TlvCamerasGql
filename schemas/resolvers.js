@@ -167,7 +167,7 @@ export const resolvers = {
               newObservtion: newObservation
             });
 
-          }, 2000);
+          }, 4000);
 
         } else {
             return pubsub.asyncIterator(NEW_OBSERVATION_TOPIC);
