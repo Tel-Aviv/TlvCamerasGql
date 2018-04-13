@@ -4,6 +4,8 @@ if( !isMockMode() )
 import elasticsearch from 'elasticsearch';
 import esb from 'elastic-builder';
 
+import { PubSub } from 'graphql-subscriptions';
+
 function isMockMode(): boolean {
 
   let mockToken = process.argv.find( (arg: string) => {
@@ -28,8 +30,9 @@ elasticClient.cluster.health({}, function(err, resp, status) {
 
 class Camera {
 
-  constructor() {
+  constructor(cameraId: integer) {
     this.id = casual.uuid;
+    this.cameraId = cameraId;
     this.cars = 0;
     this.bikes = 0;
     this.motorcyrcles = 0;
@@ -42,6 +45,9 @@ export const resolvers = {
   Query: {
 
     camera: (_, args, context) => {
+
+      let cameraId = args.Id;
+      let beforeHours = args.beforeHours;
 
       let _daysBefore = 1;
       let from = `now-${_daysBefore}d/d`;
@@ -57,17 +63,29 @@ export const resolvers = {
           )
           .agg(esb.sumAggregation('user_terms', 'rule_id'));
 
-      elasticClient.search({
+      return elasticClient.search({
         index: 'innovi',
         type: 'vcount',
         "size": 0, // omit hits from putput
         body: requestBody.toJSON()
       }).then( response => {
+        return new Camera(cameraId);
       });
 
-      return new Camera();
     },
 
   },
+
+  Subscription: {
+
+    newObservtion: {
+      subscribe: () => {
+
+        console.log('Subscribed to observations');
+
+      }
+    }
+
+  }
 
 }
