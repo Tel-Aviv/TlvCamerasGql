@@ -15,10 +15,19 @@ interface Node {
 type Camera implements Node {
     id: ID!
 
+    cameraId: Int!
+
     cars: Int
     bikes: Int
     motorcyrcles: Int
-    beforeHours: Int
+}
+
+type Observation implements Node {
+  id: ID!
+
+  cars: Int
+  bikes: Int
+  motorcyrcles: Int
 }
 
 type Query {
@@ -27,8 +36,11 @@ type Query {
       id: ID!
     ): Node
 
-    camera: Camera
+    camera(Id: Int!, beforeHours: Int): Camera
+}
 
+type Subscription {
+    newObservtion(cameraId: Int): Observation
 }
 
 `;
