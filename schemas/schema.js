@@ -17,7 +17,7 @@ type Camera implements Node {
 
     cars: Int
     bikes: Int
-    motorcycles: Int
+    motorcyrcles: Int
     beforeHours: Int
 }
 
