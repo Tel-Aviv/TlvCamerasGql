@@ -29,6 +29,21 @@ type Observation implements Node {
   when_observed: Date
 }
 
+type Serie implements Node {
+  id: ID!
+
+  label: String!
+  data: [Int!]!
+  ruleId: Int!
+}
+
+type Series implements Node {
+  id: ID!
+
+  labels: [String!]!
+  series: [Serie!]!
+}
+
 type Query {
 
     node(
@@ -36,6 +51,7 @@ type Query {
     ): Node
 
     camera(Id: Int!, beforeHours: Int): Camera
+    traffic(beforeHours: Int): Series
 }
 
 type Subscription {
