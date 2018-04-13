@@ -1,10 +1,11 @@
 import casual from 'casual';
+import moment from 'moment';
 if( !isMockMode() )
    var Kafka = require('no-kafka');
 import elasticsearch from 'elasticsearch';
 import esb from 'elastic-builder';
-
 import { PubSub } from 'graphql-subscriptions';
+import rules from './dataModel';
 
 function isMockMode(): boolean {
 
@@ -30,6 +31,31 @@ var elasticClient = new elasticsearch.Client({
 elasticClient.cluster.health({}, function(err, resp, status) {
   console.log("Elastic Health: ", resp);
 })
+
+class Serie {
+  constructor(name: string,
+              data: number[],
+              ruleId: number) {
+    this.id = casual.uuid;
+    this.label = name;
+    this.data = data;
+    this.ruleId = ruleId;
+  }
+
+}
+
+class Series {
+
+  constructor(labels: string[],
+              series: Serie[]) {
+
+    this.id = casual.uuid;
+    this.labels = labels;
+    this.series = series;
+
+  }
+
+}
 
 class Camera {
 
@@ -91,6 +117,28 @@ export const resolvers = {
       });
 
     },
+
+    traffic: (_, args, context) => {
+      if( isMockMode() ) {
+
+        let labels = [];
+        for(let i = 0; i < args.beforeHours; i++) {
+          var formattedHour = ("0" + i).slice(-2);
+          labels.push(formattedHour + ":00");
+        }
+
+        let series = [];
+        for(let i = 0; i < rules.length; i++) {
+          let data = [];
+          for(let i = 0; i < args.beforeHours; i++) {
+            data.push(casual.integer(10,300));
+          }
+          series.push(new Serie(rules[i].name, data, rules[i].ruleId));
+        }
+
+        return new Series(labels, series);
+      }
+    }
 
   },
 
