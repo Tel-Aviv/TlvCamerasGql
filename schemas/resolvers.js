@@ -1,5 +1,8 @@
- var Kafka = require('no-kafka');
+import casual from 'casual';
+if( !isMockMode() )
+   var Kafka = require('no-kafka');
 import elasticsearch from 'elasticsearch';
+import esb from 'elastic-builder';
 
 function isMockMode(): boolean {
 
@@ -26,9 +29,10 @@ elasticClient.cluster.health({}, function(err, resp, status) {
 class Camera {
 
   constructor() {
+    this.id = casual.uuid;
     this.cars = 0;
     this.bikes = 0;
-    this.motorcycles = 0;
+    this.motorcyrcles = 0;
   }
 
 }
