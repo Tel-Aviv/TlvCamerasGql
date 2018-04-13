@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql/error';
 import casual from 'casual';
 import moment from 'moment';
 if( !isMockMode() )
@@ -113,7 +114,10 @@ export const resolvers = {
         "size": 0, // omit hits from putput
         body: requestBody.toJSON()
       }).then( response => {
-        return new Camera(cameraId);
+          return new Camera(cameraId);
+      }).catch( error => {
+          console.error(error.message);
+          return new GraphQLError(error.message);
       });
 
     },
