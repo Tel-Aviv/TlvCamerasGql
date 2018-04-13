@@ -15,6 +15,9 @@ function isMockMode(): boolean {
   return mockToken;
 }
 
+const pubsub = new PubSub();
+const NEW_OBSERVATION_TOPIC = 'newObservation';
+
 const esHost = isMockMode() ? 'localhost' : '10.1.70.47';
 
 var elasticClient = new elasticsearch.Client({
@@ -33,9 +36,27 @@ class Camera {
   constructor(cameraId: integer) {
     this.id = casual.uuid;
     this.cameraId = cameraId;
+
+    this.observation = new Observation(0, 0, 0, new Date());
+
     this.cars = 0;
     this.bikes = 0;
     this.motorcyrcles = 0;
+  }
+
+}
+
+class Observation {
+
+  constructor(cars: integer,
+              bikes: integer,
+              motorcycles: integer,
+              when: Date) {
+    this.id = casual.uuid;
+    this.cars = cars;
+    this.bikes = bikes;
+    this.motorcyrcles = motorcycles;
+    this.when_observed = when;
   }
 
 }
@@ -83,9 +104,30 @@ export const resolvers = {
 
         console.log('Subscribed to observations');
 
+        if( isMockMode() && mockTraceTimerId == null ) {
+
+          mockTraceTimerId = setInterval( () => {
+
+            const newObservation = new Observation(casual.integer(0, 5),
+                                                   casual.integer(0, 5),
+                                                   casual.integer(0, 5),
+                                                   new Date()
+                                                  );
+
+            return pubsub.publish(NEW_OBSERVATION_TOPIC,
+            {
+              observation: newObservation
+            });
+
+          }, 2000);
+
+        }
+
       }
     }
 
   }
 
 }
+
+let mockTraceTimerId = null;
