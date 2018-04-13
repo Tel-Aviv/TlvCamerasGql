@@ -39,9 +39,6 @@ class Camera {
 
     this.observation = new Observation(0, 0, 0, new Date());
 
-    this.cars = 0;
-    this.bikes = 0;
-    this.motorcyrcles = 0;
   }
 
 }
@@ -99,6 +96,9 @@ export const resolvers = {
 
   Subscription: {
 
+    // Subscriptions resolvers are not a functions,
+    // but an objects with subscribe method, than returns AsyncIterable.
+
     newObservtion: {
       subscribe: () => {
 
@@ -121,6 +121,8 @@ export const resolvers = {
 
           }, 2000);
 
+        } else {
+            return pubsub.asyncIterator(TRACE_ADDED_TOPIC);
         }
 
       }
