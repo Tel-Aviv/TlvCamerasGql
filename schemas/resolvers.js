@@ -116,13 +116,13 @@ export const resolvers = {
 
             return pubsub.publish(NEW_OBSERVATION_TOPIC,
             {
-              observation: newObservation
+              newObservtion: newObservation
             });
 
           }, 2000);
 
         } else {
-            return pubsub.asyncIterator(TRACE_ADDED_TOPIC);
+            return pubsub.asyncIterator(NEW_OBSERVATION_TOPIC);
         }
 
       }
