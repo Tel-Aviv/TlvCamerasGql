@@ -16,10 +16,7 @@ type Camera implements Node {
     id: ID!
 
     cameraId: Int!
-
-    cars: Int
-    bikes: Int
-    motorcyrcles: Int
+    observation: Observation
 }
 
 type Observation implements Node {
@@ -28,6 +25,8 @@ type Observation implements Node {
   cars: Int
   bikes: Int
   motorcyrcles: Int
+
+  when_observed: Date
 }
 
 type Query {
