@@ -60,11 +60,14 @@ class Series {
 
 class Camera {
 
-  constructor(cameraId: integer) {
+  constructor(cameraId: integer,
+              cars: integer,
+              bikes: integer,
+              motorcycles: integer) {
     this.id = casual.uuid;
     this.cameraId = cameraId;
 
-    this.observation = new Observation(0, 0, 0, new Date());
+    this.observation = new Observation(cars, bikes, motorcycles, new Date());
 
   }
 
@@ -114,10 +117,11 @@ export const resolvers = {
         "size": 0, // omit hits from putput
         body: requestBody.toJSON()
       }).then( response => {
-          return new Camera(cameraId);
+          return new Camera(cameraId, 0, 0, 0);
       }).catch( error => {
           console.error(error.message);
-          return new GraphQLError(error.message);
+          //return new GraphQLError(error.message);
+          return new Camera(cameraId, 0, 0, 0);
       });
 
     },
