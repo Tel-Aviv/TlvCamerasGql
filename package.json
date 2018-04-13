@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "debug": "nodemon server.js --exec babel-node --presets es2015 --inspect-brk"
+    "load-sample-data": "babel-node ./elastic/load_sample_data.js",
+    "debug": "nodemon server.js --exec babel-node --presets es2015 --inspect-brk",
+    "debug-mock": "nodemon server.js --exec babel-node --presets es2015 --inspect-brk --mock"
   },
   "author": "",
   "license": "ISC",
@@ -20,8 +22,10 @@
     "graphql": "^0.13.2",
     "graphql-playground-middleware": "^1.1.2",
     "graphql-server": "^0.3.2",
+    "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^2.24.0",
     "http": "^0.0.0",
+    "moment": "^2.22.0",
     "no-kafka": "^3.2.9",
     "nodemon": "^1.17.3",
     "subscriptions-transport-ws": "^0.9.7"
