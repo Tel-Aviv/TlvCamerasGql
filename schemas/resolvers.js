@@ -209,7 +209,7 @@ export const resolvers = {
 
                   let cameraId = casual.random_element(mockCamerasIds);
 
-                  const newObservation = new Observation(cameraId
+                  const newObservation = new Observation(cameraId,
                                                          casual.integer(0, 5),
                                                          casual.integer(0, 5),
                                                          casual.integer(0, 5),
