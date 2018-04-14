@@ -107,7 +107,7 @@ export const resolvers = {
 
     camera: (_, args, context) => {
 
-      let cameraId = args.Id;
+      let cameraId = args.cameraId;
       let beforeHours = args.beforeHours;
 
       let _daysBefore = 1;
@@ -140,6 +140,9 @@ export const resolvers = {
     },
 
     traffic: (_, args, context) => {
+
+      const cameraId = args.cameraId;
+
       if( isMockMode() ) {
 
         let labels = [];
