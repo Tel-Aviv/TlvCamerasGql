@@ -59,8 +59,8 @@ type Query {
       id: ID!
     ): Node
 
-    camera(Id: Int!, beforeHours: Int): Camera
-    traffic(beforeHours: Int): Series
+    camera(cameraId: Int!, beforeHours: Int): Camera
+    traffic(cameraId: Int!, beforeHours: Int): Series
     devices: [Device]
 }
 
