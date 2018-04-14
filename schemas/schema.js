@@ -64,12 +64,8 @@ type Query {
     devices: [Device]
 }
 
-type Mutation {
-  currentCamera(cameraId: Int): Int
-}
-
 type Subscription {
-    newObservtion: Observation
+    newObservtion(cameraId: Int!): Observation
 }
 
 `;
