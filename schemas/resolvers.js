@@ -6,7 +6,7 @@ if( !isMockMode() )
    var Kafka = require('no-kafka');
 import elasticsearch from 'elasticsearch';
 import esb from 'elastic-builder';
-import { PubSub } from 'graphql-subscriptions';
+import { PubSub, withFilter } from 'graphql-subscriptions';
 import rules from './dataModel';
 
 function isMockMode(): boolean {
@@ -68,7 +68,7 @@ class Camera {
     this.id = casual.uuid;
     this.cameraId = cameraId;
 
-    this.observation = new Observation(cars, bikes, motorcycles, new Date());
+    this.observation = new Observation(cameraId, cars, bikes, motorcycles, new Date());
 
   }
 
@@ -76,11 +76,13 @@ class Camera {
 
 class Observation {
 
-  constructor(cars: integer,
+  constructor(cameraId: integer,
+              cars: integer,
               bikes: integer,
               motorcycles: integer,
               when: Date) {
     this.id = casual.uuid;
+    this.cameraId = cameraId;
     this.cars = cars;
     this.bikes = bikes;
     this.motorcyrcles = motorcycles;
@@ -196,37 +198,47 @@ export const resolvers = {
     // Subscriptions resolvers are not a functions,
     // but an objects with subscribe method, than returns AsyncIterable.
 
-    newObservtion: {
-      subscribe: (req) => {
+    newObservation: {
+      // resolve: (payload) => {
+      //   return payload;
+      // },
+      subscribe: withFilter(
+        () => {
+          if( isMockMode() && mockTraceTimerId == null ) {
+            mockTraceTimerId = setInterval( () => {
 
-        console.log('Subscribed to observations');
+                  let cameraId = casual.random_element(mockCamerasIds);
 
-        if( isMockMode() && mockTraceTimerId == null ) {
+                  const newObservation = new Observation(cameraId
+                                                         casual.integer(0, 5),
+                                                         casual.integer(0, 5),
+                                                         casual.integer(0, 5),
+                                                         new Date()
+                                                        );
+                  return pubsub.publish(NEW_OBSERVATION_TOPIC,
+                  {
+                    newObservation: newObservation
+                  });
 
-          mockTraceTimerId = setInterval( () => {
+            }, 1000);
 
-            const newObservation = new Observation(casual.integer(0, 5),
-                                                   casual.integer(0, 5),
-                                                   casual.integer(0, 5),
-                                                   new Date()
-                                                  );
-
-            return pubsub.publish(NEW_OBSERVATION_TOPIC,
-            {
-              newObservtion: newObservation
-            });
-
-          }, 4000);
-
-        } else {
+          }
+          else {
             return pubsub.asyncIterator(NEW_OBSERVATION_TOPIC);
+          }
+        },
+        (payload, variables) => {
+          console.log("Filter on cameraId: " + variables.cameraId);
+          return payload.newObservation.cameraId == variables.cameraId;
         }
+      )
 
-      }
     }
 
   }
 
 }
+
+const mockCamerasIds = [170, 171]; //, 172, 173, 174, 175, 176, 177, 178, 179, 180];
 
 let mockTraceTimerId = null;
