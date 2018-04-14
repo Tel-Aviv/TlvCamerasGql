@@ -28,6 +28,7 @@
     "moment": "^2.22.0",
     "no-kafka": "^3.2.9",
     "nodemon": "^1.17.3",
+    "request-promise": "^4.2.2",
     "subscriptions-transport-ws": "^0.9.7"
   }
 }
