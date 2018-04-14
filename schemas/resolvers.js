@@ -191,21 +191,13 @@ export const resolvers = {
 
   },
 
-  Mutation: {
-
-    currentCamera: function(_, {cameraId}, context) {
-      return cameraId;
-    }
-
-  },
-
   Subscription: {
 
     // Subscriptions resolvers are not a functions,
     // but an objects with subscribe method, than returns AsyncIterable.
 
     newObservtion: {
-      subscribe: () => {
+      subscribe: (req) => {
 
         console.log('Subscribed to observations');
 
