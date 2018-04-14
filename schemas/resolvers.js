@@ -191,6 +191,14 @@ export const resolvers = {
 
   },
 
+  Mutation: {
+
+    currentCamera: function(_, {cameraId}, context) {
+      return cameraId;
+    }
+
+  },
+
   Subscription: {
 
     // Subscriptions resolvers are not a functions,
