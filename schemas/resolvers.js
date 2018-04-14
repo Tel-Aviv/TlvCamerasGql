@@ -1,3 +1,4 @@
+import rp from 'request-promise';
 import { GraphQLError } from 'graphql/error';
 import casual from 'casual';
 import moment from 'moment';
@@ -88,6 +89,18 @@ class Observation {
 
 }
 
+class Device {
+  constructor(name: string,
+              cameraId: integer,
+              x, y) {
+    this.id = casual.uuid;
+    this.name = name;
+    this.cameraId = cameraId;
+    this.lat = x;
+    this.lng = y;
+  }
+}
+
 export const resolvers = {
 
   Query: {
@@ -146,6 +159,31 @@ export const resolvers = {
 
         return new Series(labels, series);
       }
+    },
+
+    devices: (_, args, context) => {
+
+      const url = 'https://api.tel-aviv.gov.il/gis/Layer?layerCode=863';
+
+      return rp({
+        uri: url,
+        headers: {
+          'User-Agent': 'GraphQL'
+        },
+        json: true
+      }).then( (response) => {
+
+        let devices = response.features.map( (device) => {
+
+          return new Device(device.attributes.shem_matzlema,
+                            device.attributes.id_mazlema,
+                            device.geometry.x,
+                            device.geometry.y);
+        });
+
+        return devices;
+
+      })
     }
 
   },
