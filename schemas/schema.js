@@ -65,7 +65,7 @@ type Query {
 }
 
 type Subscription {
-    newObservtion(cameraId: Int!): Observation
+    newObservation(cameraId: Int!): Observation
 }
 
 `;
