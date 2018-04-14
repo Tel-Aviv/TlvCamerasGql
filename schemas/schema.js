@@ -44,6 +44,15 @@ type Series implements Node {
   series: [Serie!]!
 }
 
+type Device implements Node {
+  id: ID!
+
+  name: String
+  cameraId: Int!
+  lat: Float
+  lng: Float
+}
+
 type Query {
 
     node(
@@ -52,6 +61,7 @@ type Query {
 
     camera(Id: Int!, beforeHours: Int): Camera
     traffic(beforeHours: Int): Series
+    devices: [Device]
 }
 
 type Subscription {
