@@ -2,7 +2,7 @@ import rp from 'request-promise';
 import { GraphQLError } from 'graphql/error';
 import casual from 'casual';
 import moment from 'moment';
-if( !isMockMode() )
+//if( !isMockMode() )
    var Kafka = require('no-kafka');
 import elasticsearch from 'elasticsearch';
 import esb from 'elastic-builder';
@@ -20,6 +20,116 @@ function isMockMode(): boolean {
 
 const pubsub = new PubSub();
 const NEW_OBSERVATION_TOPIC = 'newObservation';
+
+class CamerasMap {
+
+  static getCameraRules(cameraId: integer) {
+    switch( cameraId ) {
+
+      case 71: {
+        return ['203','204','205']
+      }
+
+      case 23: {
+        return ['154', '155']
+      }
+
+    }
+  }
+
+  static translate(cameraId: integer,
+                   ruleId: integer) {
+
+    let cars = 0;
+    let motorcycles = 0;
+    let bikes = 0;
+    let pedestrians = 0;
+
+    switch( cameraId ) {
+      case 71: {
+        switch( ruleId  ) {
+            case 203: {
+              cars = 1;
+            }
+            break;
+
+            case 204: {
+              bikes = 1;
+            }
+            break;
+
+            case 205: {
+              motorcycles = 1;
+            }
+            break;
+        }
+      }
+      break;
+
+      case 23: {
+        switch( ruleId ) {
+            case 155: {
+              pedestrians = 1;
+            }
+            break;
+
+            case 154: {
+              bikes = 1;
+            }
+            break;
+        }
+      }
+      break;
+
+      default:
+        return null;
+    }
+
+    return new Observation(cameraId,
+                           cars,
+                           motorcycles,
+                           bikes,
+                           pedestrians,
+                           new Date());
+ }
+
+
+}
+
+if( !isMockMode() ) {
+
+  var consumer = new Kafka.SimpleConsumer({
+    connectionString: "10.1.70.101:9092",
+    asyncCompression: true
+  })
+
+  var dataHandler = function(messageSet, topic, partition){
+
+    messageSet.forEach(function (m){
+
+        const message = m.message.value.toString('utf-8');
+        var trace = JSON.parse(message);
+
+        let observation = CamerasMap.translate(parseInt(trace.source_id, 10),
+                                               parseInt(trace.rule_id, 10));
+
+        if( observation ) {
+          pubsub.publish(NEW_OBSERVATION_TOPIC,
+            {
+              newObservation: observation
+            });
+        }
+
+    });
+
+  }
+
+  consumer.init().then( function() {
+    return consumer.subscribe('anovi', 0,
+                              dataHandler);
+  })
+
+}
 
 const esHost = isMockMode() ? 'localhost' : '10.1.70.47';
 
@@ -64,11 +174,17 @@ class Camera {
   constructor(cameraId: integer,
               cars: integer,
               bikes: integer,
-              motorcycles: integer) {
+              motorcycles: integer,
+              pedestrians: integer) {
     this.id = casual.uuid;
     this.cameraId = cameraId;
 
-    this.observation = new Observation(cameraId, cars, bikes, motorcycles, new Date());
+    this.observation = new Observation(cameraId,
+                                       cars,
+                                       bikes,
+                                       motorcycles,
+                                       pedestrians,
+                                       new Date());
 
   }
 
@@ -80,12 +196,14 @@ class Observation {
               cars: integer,
               bikes: integer,
               motorcycles: integer,
+              pedestrians: integer,
               when: Date) {
     this.id = casual.uuid;
     this.cameraId = cameraId;
     this.cars = cars;
     this.bikes = bikes;
     this.motorcyrcles = motorcycles;
+    this.pedestrians = pedestrians;
     this.when_observed = when;
   }
 
@@ -129,14 +247,14 @@ export const resolvers = {
       return elasticClient.search({
         index: 'innovi',
         type: 'vcount',
-        "size": 0, // omit hits from putput
+        "size": 0, // omit hits from output
         body: requestBody.toJSON()
       }).then( response => {
-          return new Camera(cameraId, 0, 0, 0);
+          return new Camera(cameraId, 0, 0, 0, 0, new Date());
       }).catch( error => {
           console.error(error.message);
           //return new GraphQLError(error.message);
-          return new Camera(cameraId, 0, 0, 0);
+          return new Camera(cameraId, 0, 0, 0, 0, new Date());
       });
 
     },
@@ -144,26 +262,84 @@ export const resolvers = {
     traffic: (_, args, context) => {
 
       const cameraId = args.cameraId;
+      const beforeHours = args.beforeHours;
+      const rules_ids = CamerasMap.getCameraRules(cameraId);
+
+      let labels = [];
+      for(let i = 0; i < beforeHours; i++) {
+        var formattedHour = ("0" + i).slice(-2);
+        labels.push(formattedHour + ":00");
+      }
 
       if( isMockMode() ) {
-
-        let labels = [];
-        for(let i = 0; i < args.beforeHours; i++) {
-          var formattedHour = ("0" + i).slice(-2);
-          labels.push(formattedHour + ":00");
-        }
 
         let series = [];
         for(let i = 0; i < rules.length; i++) {
           let data = [];
-          for(let i = 0; i < args.beforeHours; i++) {
+          for(let i = 0; i < beforeHours; i++) {
             data.push(casual.integer(10,300));
           }
           series.push(new Serie(rules[i].name, data, rules[i].ruleId));
         }
 
         return new Series(labels, series);
-      }
+
+      } else {
+
+        let from = `now-${beforeHours}h/h`;
+
+        let histogramAgg = esb.dateHistogramAggregation('distribution', 'event_time', 'hour')
+                                 .order('_key', "desc");
+        rules_ids.map( ruleId => {
+          histogramAgg.agg(
+            esb.filterAggregation(ruleId.toString(), esb.termQuery('rule_id', ruleId) )
+            .agg(
+                esb.termsAggregation('event_name', "event_name.keyword")
+            )
+          )
+        });
+
+        let requestBody = esb.requestBodySearch()
+        .query(
+          esb.boolQuery()
+              .must(esb.rangeQuery('event_time')
+                      .gte(from)
+                      .lte('now+1d/d')
+              )
+              .filter(
+                  esb.termsQuery('rule_id', rules_ids)
+              )
+        )
+        .agg(histogramAgg);
+
+          return elasticClient.search({
+            index: 'innovi',
+            type: 'vcount',
+            "size": 0, // omit hits from output
+            body: requestBody.toJSON()
+          }).then( response => {
+
+            let series = [];
+
+            // response.aggregations.distribution.buckets.forEach( (bucket, index)=> {
+            //
+            //     data.push(bucket[index].doc_count);
+            //
+            //     series.push(new Serie(bucket[index].key_as_string,
+            //                           data,
+            //                           servicesIds[i]));
+            //
+            // });
+
+            return new Series(labels, series);
+
+          }).catch( error => {
+
+              console.error(error.message);
+
+          });
+        }
+
     },
 
     devices: (_, args, context) => {
@@ -180,10 +356,13 @@ export const resolvers = {
 
         return response.features.map( (device) => {
 
-          return new Device(device.attributes.shem_matzlema,
-                            device.attributes.id_mazlema,
-                            device.geometry.y,
-                            device.geometry.x);
+          //if( device.sw_analytika ) {
+
+            return new Device(device.attributes.shem_matzlema,
+                              device.attributes.id_mazlema,
+                              device.geometry.y,
+                              device.geometry.x);
+          //}
         });
 
       })
@@ -211,6 +390,7 @@ export const resolvers = {
                                                          casual.integer(0, 5),
                                                          casual.integer(0, 5),
                                                          casual.integer(0, 5),
+                                                         casual.integer(0, 5), // pedestrians
                                                          new Date()
                                                         );
                   return pubsub.publish(NEW_OBSERVATION_TOPIC,
