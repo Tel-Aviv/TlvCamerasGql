@@ -25,6 +25,7 @@ type Observation implements Node {
   cars: Int
   bikes: Int
   motorcyrcles: Int
+  pedestrians: Int
 
   when_observed: Date
 }
