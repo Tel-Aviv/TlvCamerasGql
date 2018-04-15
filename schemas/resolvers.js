@@ -8,6 +8,7 @@ import elasticsearch from 'elasticsearch';
 import esb from 'elastic-builder';
 import { PubSub, withFilter } from 'graphql-subscriptions';
 import rules from './dataModel';
+import cameraAliases from './cameraAliases';
 
 function isMockMode(): boolean {
 
@@ -211,8 +212,9 @@ class Observation {
 
 class Device {
   constructor(name: string,
-              cameraId: integer,
-              x, y) {
+              cameraId: number,
+              x: number,
+              y: number) {
     this.id = casual.uuid;
     this.name = name;
     this.cameraId = cameraId;
@@ -356,14 +358,28 @@ export const resolvers = {
 
         return response.features.map( (device) => {
 
-          //if( device.sw_analytika ) {
+            // Field device.sw_analytika does exists
+            // on returned features, but seems not used.
+            // Instead, we maintain our own list on the analytic cameras.
+            const aliasCameraId = cameraAliases[device.attributes.id_mazlema];
+            if( aliasCameraId ) {
 
-            return new Device(device.attributes.shem_matzlema,
-                              device.attributes.id_mazlema,
-                              device.geometry.y,
-                              device.geometry.x);
-          //}
-        });
+              return new Device(device.attributes.shem_matzlema,
+                                aliasCameraId,
+                                device.geometry.y,
+                                device.geometry.x);
+            } else {
+              return null;
+            }
+
+        }).filter( device => {
+          if( device && device.cameraId ) {
+
+            return mockAnalyticCamerasIds.includes(parseInt(device.cameraId));
+
+          } else
+            return false;
+        } );
 
       })
     }
@@ -384,7 +400,7 @@ export const resolvers = {
           if( isMockMode() && mockTraceTimerId == null ) {
             mockTraceTimerId = setInterval( () => {
 
-                  let cameraId = casual.random_element(mockCamerasIds);
+                  let cameraId = casual.random_element(mockAnalyticCamerasIds);
 
                   const newObservation = new Observation(cameraId,
                                                          casual.integer(0, 5),
@@ -417,6 +433,6 @@ export const resolvers = {
 
 }
 
-const mockCamerasIds = [170, 171]; //, 172, 173, 174, 175, 176, 177, 178, 179, 180];
+const mockAnalyticCamerasIds = [71, 23];
 
 let mockTraceTimerId = null;
