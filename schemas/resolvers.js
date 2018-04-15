@@ -178,15 +178,13 @@ export const resolvers = {
         json: true
       }).then( (response) => {
 
-        let devices = response.features.map( (device) => {
+        return response.features.map( (device) => {
 
           return new Device(device.attributes.shem_matzlema,
                             device.attributes.id_mazlema,
-                            device.geometry.x,
-                            device.geometry.y);
+                            device.geometry.y,
+                            device.geometry.x);
         });
-
-        return devices;
 
       })
     }
