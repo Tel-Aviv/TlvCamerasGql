@@ -458,9 +458,9 @@ export const resolvers = {
         json: true
       }).then( (response) => {
 
-        return new Devices(
+        //return new Devices(
 
-          response.features.reduce( (finalList, device) => {
+          return response.features.reduce( (finalList, device) => {
 
               // Field device.sw_analytika does exists
               // on returned features, but seems not used.
@@ -480,11 +480,12 @@ export const resolvers = {
 
               return finalList;
 
-          }, [])
-        );
+          }, []);
+        //);
 
       }).catch(error => {
         console.error(error);
+        return new GraphQLError(error.message);
       })
     }
 
