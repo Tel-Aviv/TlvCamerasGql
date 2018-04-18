@@ -1,3 +1,5 @@
+// @flow
+import DataLoader from 'dataloader';
 import rp from 'request-promise';
 import { GraphQLError } from 'graphql/error';
 import casual from 'casual';
@@ -22,79 +24,152 @@ function isMockMode(): boolean {
 const pubsub = new PubSub();
 const NEW_OBSERVATION_TOPIC = 'newObservation';
 
+const myBatchGetDevices = () => {
+  console.log('get Devices');
+}
+
+const devicesLoader = new DataLoader(keys => myBatchGetDevices(keys));
+
 class CamerasMap {
 
   static getCameraRules(cameraId: integer) {
-    switch( cameraId ) {
 
-      case 71: {
-        return ['203','204','205']
-      }
+     switch( cameraId ) {
 
-      case 23: {
-        return ['154', '155']
-      }
+       case 73: {
+         return ['216', '217', '218', '219', '215', '214'];
+       }
 
-    }
-  }
+       case 72: {
+         return ['211', '210', '209'];
+       }
 
-  static translate(cameraId: integer,
-                   ruleId: integer) {
+       case 71: {
+         return ['203','204','205']
+       }
 
-    let cars = 0;
-    let motorcycles = 0;
-    let bikes = 0;
-    let pedestrians = 0;
+       case 23: {
+         return ['154', '155']
+       }
 
-    switch( cameraId ) {
-      case 71: {
-        switch( ruleId  ) {
-            case 203: {
-              cars = 1;
-            }
-            break;
+       case 51: {
+         return ['161', '162', '206']
+       }
 
-            case 204: {
-              bikes = 1;
-            }
-            break;
+     }
+   }
 
-            case 205: {
-              motorcycles = 1;
-            }
-            break;
-        }
-      }
-      break;
+   static translate(cameraId: integer,
+                    ruleId: integer) {
 
-      case 23: {
-        switch( ruleId ) {
-            case 155: {
-              pedestrians = 1;
-            }
-            break;
+     let cars = 0;
+     let motorcycles = 0;
+     let bikes = 0;
+     let pedestrians = 0;
 
-            case 154: {
-              bikes = 1;
-            }
-            break;
-        }
-      }
-      break;
+     switch( cameraId ) {
 
-      default:
-        return null;
-    }
+       case 73: {
 
-    return new Observation(cameraId,
-                           cars,
-                           motorcycles,
-                           bikes,
-                           pedestrians,
-                           new Date());
- }
+         switch( ruleId ) {
 
+           case 216:
+           case 217: {
+             motorcycles = 1;
+           }
+           break;
 
+           case 218:
+           case 219: {
+             bikes = 1;
+           }
+           break;
+
+           case 215:
+           case 214: {
+             cars = 1;
+           }
+           break;
+         }
+       }
+       break;
+
+       case 72: {
+         switch( ruleId ) {
+           case 211: {
+             bikes = 1;
+           }
+           break;
+
+           case 210: {
+             cars = 1;
+           }
+           break;
+
+           case 209: {
+             motorcycles = 1;
+           }
+           break;
+         }
+       }
+       break;
+
+       case 71: {
+         switch( ruleId  ) {
+             case 203: {
+               cars = 1;
+             }
+             break;
+
+             case 204: {
+               bikes = 1;
+             }
+             break;
+
+             case 205: {
+               motorcycles = 1;
+             }
+             break;
+         }
+       }
+       break;
+
+       case 23: {
+         switch( ruleId ) {
+             case 155: {
+               pedestrians = 1;
+             }
+             break;
+
+             case 154: {
+               bikes = 1;
+             }
+             break;
+         }
+       }
+       break;
+
+       case 51: {
+         switch ( ruleId ) {
+           case 161:
+             pedestrians = 1;
+             break;
+
+           case 162:
+             bikes = 1;
+             break;
+
+           case 206:
+             cars = 1;
+             break;
+
+         }
+       }
+
+       default:
+         return null;
+     }
+   }
 }
 
 if( !isMockMode() ) {
@@ -172,11 +247,11 @@ class Series {
 
 class Camera {
 
-  constructor(cameraId: integer,
-              cars: integer,
-              bikes: integer,
-              motorcycles: integer,
-              pedestrians: integer) {
+  constructor(cameraId: number,
+              cars: number,
+              bikes: number,
+              motorcycles: number,
+              pedestrians: number) {
     this.id = casual.uuid;
     this.cameraId = cameraId;
 
@@ -193,17 +268,25 @@ class Camera {
 
 class Observation {
 
-  constructor(cameraId: integer,
-              cars: integer,
-              bikes: integer,
-              motorcycles: integer,
-              pedestrians: integer,
+  // id: number;
+  // cameraId: number;
+  // cars: number;
+  // bikes: number;
+  // motorcycles: number;
+  // pedestrians: number;
+  // when_observed: Date;
+
+  constructor(cameraId: number,
+              cars: number,
+              bikes: number,
+              motorcycles: number,
+              pedestrians: number,
               when: Date) {
     this.id = casual.uuid;
     this.cameraId = cameraId;
     this.cars = cars;
     this.bikes = bikes;
-    this.motorcyrcles = motorcycles;
+    this.motorcycles = motorcycles;
     this.pedestrians = pedestrians;
     this.when_observed = when;
   }
@@ -211,15 +294,32 @@ class Observation {
 }
 
 class Device {
+
+  // id: number;
+  // name: string;
+  // cameraId: number;
+  // streamUrl: string;
+  // lat: number;
+  // lng: number;
+
   constructor(name: string,
               cameraId: number,
+              streamUrl: string,
               x: number,
               y: number) {
     this.id = casual.uuid;
     this.name = name;
     this.cameraId = cameraId;
+    this.streamUrl = streamUrl;
     this.lat = x;
     this.lng = y;
+  }
+}
+
+class Devices {
+  constructor(devices: []) {
+    this.id = casual.uuid;
+    this.list = devices;
   }
 }
 
@@ -346,6 +446,8 @@ export const resolvers = {
 
     devices: (_, args, context) => {
 
+      const values = Object.values(cameraAliases);
+
       const url = 'https://api.tel-aviv.gov.il/gis/Layer?layerCode=863';
 
       return rp({
@@ -356,31 +458,33 @@ export const resolvers = {
         json: true
       }).then( (response) => {
 
-        return response.features.map( (device) => {
+        return new Devices(
 
-            // Field device.sw_analytika does exists
-            // on returned features, but seems not used.
-            // Instead, we maintain our own list on the analytic cameras.
-            const aliasCameraId = cameraAliases[device.attributes.id_mazlema];
-            if( aliasCameraId ) {
+          response.features.reduce( (finalList, device) => {
 
-              return new Device(device.attributes.shem_matzlema,
-                                aliasCameraId,
-                                device.geometry.y,
-                                device.geometry.x);
-            } else {
-              return null;
-            }
+              // Field device.sw_analytika does exists
+              // on returned features, but seems not used.
+              // Instead, we maintain our own list on the analytic cameras.
+              const aliasCamera= cameraAliases[device.attributes.id_mazlema];
+              if( aliasCamera ) {
+                const aliasCameraId = aliasCamera.alias;
+                const streamUrl = cameraAliases[device.attributes.id_mazlema].url;
+                let _device = new Device(device.attributes.shem_matzlema,
+                                        aliasCameraId,
+                                        streamUrl,
+                                        device.geometry.y,
+                                        device.geometry.x);
 
-        }).filter( device => {
-          if( device && device.cameraId ) {
+                finalList.push(_device);
+              }
 
-            return mockAnalyticCamerasIds.includes(parseInt(device.cameraId));
+              return finalList;
 
-          } else
-            return false;
-        } );
+          }, [])
+        );
 
+      }).catch(error => {
+        console.error(error);
       })
     }
 
@@ -398,32 +502,43 @@ export const resolvers = {
       subscribe: withFilter(
         () => {
           if( isMockMode() && mockTraceTimerId == null ) {
+
+            let analyticsCameras = [];
+            for(var key in cameraAliases) {
+              if( cameraAliases.hasOwnProperty(key) )
+                analyticsCameras.push(cameraAliases[key].alias);
+            }
+
             mockTraceTimerId = setInterval( () => {
 
-                  let cameraId = casual.random_element(mockAnalyticCamerasIds);
+                  let cameraId = casual.random_element(analyticsCameras);
 
-                  const newObservation = new Observation(cameraId,
-                                                         casual.integer(0, 5),
-                                                         casual.integer(0, 5),
-                                                         casual.integer(0, 5),
-                                                         casual.integer(0, 5), // pedestrians
-                                                         new Date()
+                  const observation = new Observation(cameraId,
+                                                       casual.integer(0, 5),
+                                                       casual.integer(0, 5),
+                                                       casual.integer(0, 5),
+                                                       casual.integer(0, 5), // pedestrians
+                                                       new Date()
                                                         );
                   return pubsub.publish(NEW_OBSERVATION_TOPIC,
                   {
-                    newObservation: newObservation
+                    newObservation: observation
                   });
 
             }, 1000);
 
           }
-          else {
-            return pubsub.asyncIterator(NEW_OBSERVATION_TOPIC);
-          }
+
+          return pubsub.asyncIterator(NEW_OBSERVATION_TOPIC);
+
         },
         (payload, variables) => {
-          console.log("Filter on cameraId: " + variables.cameraId);
-          return payload.newObservation.cameraId == variables.cameraId;
+          if( payload.newObservation.cameraId == variables.cameraId ) {
+            console.log(`${payload.newObservation.when_observed} Filtered on cameraId: ${variables.cameraId}`);
+            return true;
+          } else {
+            return false;
+          }
         }
       )
 
@@ -432,7 +547,5 @@ export const resolvers = {
   }
 
 }
-
-const mockAnalyticCamerasIds = [71, 23];
 
 let mockTraceTimerId = null;

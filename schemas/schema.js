@@ -24,7 +24,7 @@ type Observation implements Node {
 
   cars: Int
   bikes: Int
-  motorcyrcles: Int
+  motorcycles: Int
   pedestrians: Int
 
   when_observed: Date
@@ -50,8 +50,14 @@ type Device implements Node {
 
   name: String
   cameraId: Int!
+  streamUrl: String
   lat: Float
   lng: Float
+}
+
+type Devices implements Node {
+  id: ID!
+  list: [Device]
 }
 
 type Query {
@@ -62,7 +68,9 @@ type Query {
 
     camera(cameraId: Int!, beforeHours: Int): Camera
     traffic(cameraId: Int!, beforeHours: Int): Series
-    devices: [Device]
+    #devices: [Device]
+
+    devices: Devices
 }
 
 type Subscription {
