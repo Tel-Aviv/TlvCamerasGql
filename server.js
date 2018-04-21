@@ -1,7 +1,8 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { graphiqlExpress } from 'graphql-server';
-import graphqlHTTP from 'express-graphql';
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
+import { ApolloEngine } from 'apollo-engine';
+
 import { createServer } from 'http';
 import path from 'path';
 import cors from 'cors';
@@ -18,15 +19,25 @@ graphQLServer.use('*', cors({
                     origin: '*'
                   })
        );
+
 graphQLServer.use('/graphql',
        bodyParser.json(),
-       graphqlHTTP({
+       graphqlExpress({
                      schema: schema,
+                     //tracing: true,
+                     cacheControl: true,
                      graphiql: process.env.NODE_ENV === 'development'
                  })
 );
 
 const PORT = process.env.port || 3002;
+
+graphQLServer.use('/graphiql',
+      graphiqlExpress({
+          endpointURL: '/graphql',
+          subscriptionsEndpoint: `ws://localhost:${PORT}/subscriptions`
+      })
+);
 
 graphQLServer.use('/playground',
                   expressPlayground({
@@ -34,26 +45,26 @@ graphQLServer.use('/playground',
                                       subscriptionEndpoint: `ws://localhost:${PORT}/subscriptions`
                                     })
                 );
-graphQLServer.use('/graphiql',
-      graphiqlExpress({
-          endpointURL: '/graphql',
-          subscriptionsEndpoint: `ws://185.10.2.55:${PORT}/subscriptions`
-      })
-);
+
+const engine = new ApolloEngine({
+  apiKey: 'service:oleg_kleiman_apollo:1DEVMvT-6k4twxu4spuKMA'
+});
 
 const websocketServer = createServer(graphQLServer);
 
-websocketServer.listen(PORT, () => {
-    console.log(`Websocket Server is listening on: ${PORT}`);
+engine.listen({
+  port: PORT,
+  //expressApp: graphQLServer,
+  httpServer: websocketServer,
+}, () => {
+  console.log(`ApolloEngine is listening on port ${PORT}`);
 
-    // Set up the WebSocket for handling GraphQL subscriptions
-    new SubscriptionServer({
-      execute,
-      subscribe,
-      schema
-    }, {
-      server: websocketServer,
-      path: '/subscriptions',
-    });
-  }
-);
+      new SubscriptionServer({
+        execute,
+        subscribe,
+        schema
+      }, {
+        server: websocketServer,
+        path: '/subscriptions',
+      });
+});
