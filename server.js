@@ -24,7 +24,7 @@ graphQLServer.use('/graphql',
        bodyParser.json(),
        graphqlExpress({
                      schema: schema,
-                     //tracing: true,
+                     tracing: true,
                      cacheControl: true,
                      graphiql: process.env.NODE_ENV === 'development'
                  })
