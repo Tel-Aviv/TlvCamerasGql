@@ -68,7 +68,7 @@ type Query {
 
     camera(cameraId: Int!, beforeHours: Int): Camera
     traffic(cameraId: Int!, beforeHours: Int): Series
-    devices: [Device]
+    devices: [Device] @cacheControl(maxAge: 500)
 
     #devices: Devices
 }
